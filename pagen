@@ -1,0 +1,148 @@
+#!/usr/bin/python
+import os
+import sys
+import random
+
+# PaGEN v1.00 A password Generator
+# Author: Paraxic <paraxic@outlook.com>
+# Date: 07/08/17
+# Rewrite of gen_pass
+
+
+def char_pool(alpha_low, alpha_upp, numeric, special):
+ car_pool = list(alpha_low + alpha_upp + numeric + special)
+ return car_pool
+
+def char_in_list(char, list_of_chars):
+ for c in list_of_chars:
+  if char == c:
+   return True
+ return False
+
+def rate_pass(password, special, numeric, alpha):
+ weight = 0.0
+ for char in password:
+  if char_in_list(char, numeric):
+   weight += 0.20
+  if char_in_list(char, special):
+   weight += 0.30
+  if char_in_list(char,alpha):
+    if char.isupper():
+     weight += 0.15
+    else:
+     weight += 0.05
+ return weight
+
+def pagen_rpass(length, car_pool):
+ rpass = []
+ for x in range(int(length)):
+  rpass.append(random.choice(car_pool))
+ return "".join(rpass)
+
+def pagen_pincode(numeric):
+ pin = []
+ for x in range(4):
+  pin.append(random.choice(numeric))
+ return "".join(pin)
+
+alpha_low = "abcdefghijklmnopqrstuvwxyz"
+alpha_upp = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+numeric = "0123456789"
+special = "!@#$%^&*()-_+=~`\'\"[]{}|\\\/<>,.?"
+alpha = list(alpha_low + alpha_upp)
+car_pool = char_pool(alpha_low,alpha_upp,numeric,special)
+# Main program
+#------------------------------------------------------------------------------
+
+args = sys.argv
+cnt = 0
+length = 0
+mode = ''
+spmod = False
+quiet = False
+one_arg = False
+two_arg = False
+arg_cnt = 0
+passd = ''
+# arg parsing
+for arg in args:
+ if arg == '-h' or arg == '--help':
+   mode = 'help'
+   break
+ if arg == '-r' or arg == '--random':
+  mode = 'random'
+  two_arg = True
+  continue
+ if arg == "-p" or arg == "--pin":
+  mode = "pin"
+  one_arg = True
+  continue
+ if arg == "-q" or arg == "--quiet":
+  quiet = True
+ if arg == "-R" or arg == "--rate":
+  mode = "rate"
+  one_arg = True
+  continue
+ if arg == "-s" or arg == "--special":
+  spmod = True
+  continue
+ if spmod == True:
+  accepted_special = arg
+  car_pool = char_pool(alpha_low,alpha_upp,numeric,accepted_special)
+  spmod = False
+ if one_arg == True and mode != "rate":
+   cnt = arg
+   one_arg = False
+ if one_arg == True and mode == "rate":
+  passd = arg
+  one_arg = False
+ if two_arg == True:
+  if arg_cnt == 0:
+   cnt = arg
+   arg_cnt = 1
+   continue
+  if arg_cnt == 1: 
+   length = arg
+   arg_cnt = 0
+   two_arg = False
+
+# mode parsing
+if mode == "help":
+ print("PaGEN a Password Generator v1.00")
+ print("-------------------------------")
+ print("Usage: pagen [-hrRspq] [optargs]")
+ print("    -h/--help                     This help message")
+ print("    -r/--random [cnt] [length]    Generate a Random Password") 
+ print("    -R/--rate [password]          Rate Your Password")
+ print("    -s/--special [accpt_chars]    Change Acceptable Special Chars")
+ print("                                  NOTE: USE \'\' for shell escapes")
+ print()
+ print("    -p/--pin    [cnt]             Generate a Random Pin Number")
+ print("    -q/--quiet                    Disable extraneous text & rating")
+ print()
+ print("Bug Reports or Questions email Paraxic <paraxic@outlook.com>")
+
+if mode == "rate":
+ rating = rate_pass(passd,special,numeric,alpha)
+ if rating >= 2.0:
+  print("Wonderful! Your password is quite strong!")
+ if rating > 1.0 and rating < 1.5:
+  print("Great News!!! Your password is moderately strong!")
+ elif rating < 1.0 and rating > 0.6:
+  print("Meh!! Your password is moderate at best!")
+ elif rating < 0.6:
+  print("I don't even... Your password is pathetically easy change it immediately!")
+ print("Password: ",passd," Rating: ", rating)
+if mode == "random":
+ for i in range(int(cnt)):
+  new_pass = pagen_rpass(length,car_pool)
+  rating = rate_pass(new_pass,special,numeric,alpha)
+  if quiet == True:
+   print(new_pass)
+  else:
+   print(new_pass," Rating: ", rating)
+
+if mode == "pin":
+ for i in range(int(cnt)):
+  new_pin = pagen_pincode(numeric)
+  print(new_pin)
